@@ -15,5 +15,5 @@ Sistem Pendukung Keputusan Mobilitas Mahasiswa berbasis topologi jalan asli (OSR
 
 ### 1. Clone Repository
 ```bash
-git clone [https://github.com/USERNAME_KAMU/smart-commute-ai.git](https://github.com/USERNAME_KAMU/smart-commute-ai.git)
+git clone https://github.com/yukarimizura/smart-commute.git
 cd smart-commute-ai
