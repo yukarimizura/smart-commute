@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* Reset total agar HTML & Body memenuhi layar 100% tanpa margin/center bawaan Vite */
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #020617; /* slate-950 */
+  overflow-x: hidden;
+}
