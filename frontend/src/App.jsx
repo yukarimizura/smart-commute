@@ -1,11 +1,8 @@
 import { useState } from 'react'
-import Navbar from './components/Navbar'
-import Home from './components/Home'
-import Methodology from './components/Methodology'
-import CommuteMap from './components/CommuteMap'
-import ControlPanel from './components/ControlPanel'
-import TelemetryBanner from './components/TelemetryBanner'
-import ResultsGrid from './components/ResultsGrid'
+import Navbar from './components/layout/Navbar'
+import Home from './components/home/Home'
+import Methodology from './components/methodology/Methodology'
+import Simulator from './components/simulator/Simulator'
 import { analyzeRouteApi, geocodeSearch } from './api/commuteApi'
 
 export default function App() {
@@ -82,87 +79,51 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
-      {/* 1. Header Navbar */}
+      {/* 1. Header Navbar Global */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* 2. Isi Halaman */}
+      {/* 2. Isi Halaman Berdasarkan Tab */}
       <main className="flex-1 w-full">
         {activeTab === 'home' && (
           <Home onStart={() => setActiveTab('simulator')} />
         )}
 
+        {activeTab === 'simulator' && (
+          <Simulator
+            originCoords={originCoords}
+            destCoords={destCoords}
+            originText={originText}
+            setOriginText={setOriginText}
+            destText={destText}
+            setDestText={setDestText}
+            activeFocus={activeFocus}
+            selectedMode={selectedMode}
+            setSelectedMode={setSelectedMode}
+            driverSkill={driverSkill}
+            setDriverSkill={setDriverSkill}
+            departureTime={departureTime}
+            setDepartureTime={setDepartureTime}
+            dayType={dayType}
+            setDayType={setDayType}
+            targetArrivalTime={targetArrivalTime}
+            setTargetArrivalTime={setTargetArrivalTime}
+            summary={summary}
+            results={results}
+            loading={loading}
+            errorMsg={errorMsg}
+            onSearchOrigin={handleSearchOrigin}
+            onSearchDest={handleSearchDest}
+            onPickOrigin={handlePickOrigin}
+            onAnalyze={handleAnalyze}
+          />
+        )}
+
         {activeTab === 'methodology' && (
           <Methodology />
         )}
-
-        {activeTab === 'simulator' && (
-          <div className="w-full max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8 space-y-6">
-            <header className="border-b border-slate-800 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded bg-sky-500/20 text-sky-400 font-mono text-xs font-bold border border-sky-500/30">
-                    AOL PROTOTYPE
-                  </span>
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-                    Smart Commute <span className="text-sky-400">DSS</span>
-                  </h1>
-                </div>
-                <p className="text-xs md:text-sm text-slate-400 mt-1">
-                  Decision Support System Mobilitas Mahasiswa: Pola Kemacetan Jakarta, Waktu Keberangkatan & Mitigasi Emisi
-                </p>
-              </div>
-              <div className="bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs text-slate-300">
-                Tujuan: <strong className="text-emerald-400">{destText}</strong>
-              </div>
-            </header>
-
-            {errorMsg && (
-              <div className="bg-rose-500/10 border border-rose-500/40 p-3.5 rounded-xl text-rose-400 text-xs md:text-sm">
-                ⚠️ {errorMsg}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-              <div className="lg:col-span-7">
-                <CommuteMap 
-                  originCoords={originCoords}
-                  destCoords={destCoords}
-                  onPickOrigin={handlePickOrigin}
-                  activeFocus={activeFocus}
-                />
-              </div>
-
-              <div className="lg:col-span-5">
-                <ControlPanel 
-                  originText={originText}
-                  setOriginText={setOriginText}
-                  destText={destText}
-                  setDestText={setDestText}
-                  selectedMode={selectedMode}
-                  setSelectedMode={setSelectedMode}
-                  driverSkill={driverSkill}
-                  setDriverSkill={setDriverSkill}
-                  departureTime={departureTime}
-                  setDepartureTime={setDepartureTime}
-                  dayType={dayType}
-                  setDayType={setDayType}
-                  targetArrivalTime={targetArrivalTime}
-                  setTargetArrivalTime={setTargetArrivalTime}
-                  onSearchOrigin={handleSearchOrigin}
-                  onSearchDest={handleSearchDest}
-                  onAnalyze={handleAnalyze}
-                  loading={loading}
-                />
-              </div>
-            </div>
-
-            {/* Banner dan Grid hanya tampil jika data kalkulasi sudah diterima */}
-            {summary && <TelemetryBanner summary={summary} />}
-            {results && <ResultsGrid results={results} />}
-          </div>
-        )}
       </main>
 
+      {/* 3. Footer Global */}
       <footer className="w-full border-t border-slate-900 py-6 text-center text-xs text-slate-500">
         Smart Commute Real-Time Engine &copy; 2026 &bull; Decision Support System Mobilitas Mahasiswa
       </footer>
