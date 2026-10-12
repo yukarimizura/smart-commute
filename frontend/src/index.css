@@ -14,3 +14,20 @@ body {
   background-color: #020617; /* slate-950 */
   overflow-x: hidden;
 }
+
+/* Styling Dark Mode Elegan untuk Tile OSM Resmi Tanpa API Key */
+.map-tiles-dark {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+/* Biarkan popup Leaflet tetap terbaca normal */
+.leaflet-popup-content-wrapper {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #0f172a !important;
+}
