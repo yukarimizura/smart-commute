@@ -2,7 +2,6 @@ import React, { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
-// Konfigurasi icon default Leaflet agar pin terbaca di React Vite
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -10,7 +9,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-// Komponen helper untuk auto-pan/zoom kamera peta saat koordinat berubah
 function MapController({ centerCoords }) {
   const map = useMap()
   useEffect(() => {
@@ -21,7 +19,6 @@ function MapController({ centerCoords }) {
   return null
 }
 
-// Komponen helper untuk mengambil titik koordinat klik pengguna di peta
 function MapPicker({ onPick }) {
   useMapEvents({
     click(e) {
@@ -49,7 +46,7 @@ export default function CommuteMap({
         className="w-full h-full z-0"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -59,26 +56,59 @@ export default function CommuteMap({
         {/* Marker Titik Asal */}
         {originCoords && (
           <Marker position={originCoords}>
-            <Popup>Titik Asal (Kos / Rumah)</Popup>
+            <Popup>Titik Asal</Popup>
           </Marker>
         )}
 
-        {/* Marker Titik Tujuan Kampus */}
+        {/* Marker Titik Tujuan */}
         {destCoords && (
           <Marker position={destCoords}>
-            <Popup>Titik Tujuan (BINUS Campus)</Popup>
+            <Popup>Titik Tujuan</Popup>
           </Marker>
         )}
 
-        {/* Render 2 - 3 Polylines Garis Rute Posibilitas */}
+        {/* Render Rute */}
         {routesPreview.map((route) => {
           const isSelected = route.id === selectedRouteId
+
+          // JIKA MODA KRL: Gambar segmen first-mile, rel, dan last-mile secara bersih
+          if (route.mode_type === 'krl' && route.segments) {
+            return (
+              <React.Fragment key={route.id}>
+                {/* 1. First-Mile Jalan Kaki ke Stasiun */}
+                <Polyline
+                  positions={route.segments.first_mile}
+                  pathOptions={{ color: '#38bdf8', weight: 4, dashArray: '4, 8', opacity: 0.9 }}
+                >
+                  <Popup>Jalan Kaki / Feeder ke {route.segments.origin_station}</Popup>
+                </Polyline>
+
+                {/* 2. Jalur Rel Kereta / KRL */}
+                <Polyline
+                  positions={route.segments.rail}
+                  pathOptions={{ color: '#ef4444', weight: 6, opacity: 1.0 }}
+                >
+                  <Popup>Jalur Kereta Api: {route.segments.origin_station} ➔ {route.segments.dest_station}</Popup>
+                </Polyline>
+
+                {/* 3. Last-Mile Jalan Kaki dari Stasiun ke Tujuan */}
+                <Polyline
+                  positions={route.segments.last_mile}
+                  pathOptions={{ color: '#38bdf8', weight: 4, dashArray: '4, 8', opacity: 0.9 }}
+                >
+                  <Popup>Jalan Kaki dari {route.segments.dest_station} ke Tujuan</Popup>
+                </Polyline>
+              </React.Fragment>
+            )
+          }
+
+          // JIKA MOBIL ATAU MOTOR: Gambar garis polyline biasa
           return (
             <Polyline
               key={route.id}
               positions={route.coordinates}
               pathOptions={{
-                color: isSelected ? route.color : '#94a3b8',
+                color: isSelected ? route.color : '#64748b',
                 weight: isSelected ? 6 : 4,
                 opacity: isSelected ? 0.95 : 0.45,
                 dashArray: isSelected ? null : '6, 8'
@@ -89,7 +119,7 @@ export default function CommuteMap({
             >
               <Popup>
                 <div className="text-xs">
-                  <strong className="text-slate-900">{route.label}</strong><br />
+                  <strong>{route.label}</strong><br />
                   Jarak: {route.distance_km} km<br />
                   Waktu: &plusmn;{route.duration_minutes} menit
                 </div>
@@ -99,11 +129,11 @@ export default function CommuteMap({
         })}
       </MapContainer>
 
-      {/* Floating Card: Pemilih 2-3 Opsi Rute di atas Peta */}
+      {/* Floating Card: Pemilih Rute */}
       {routesPreview.length > 0 && (
-        <div className="absolute top-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-800 p-2.5 rounded-xl shadow-xl space-y-1.5 max-w-[210px]">
+        <div className="absolute top-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-800 p-2.5 rounded-xl shadow-xl space-y-1.5 max-w-[230px]">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
-            Posibilitas Rute ({routesPreview.length})
+            Opsi Rute ({routesPreview.length})
           </div>
           {routesPreview.map((r) => (
             <button
@@ -122,9 +152,14 @@ export default function CommuteMap({
         </div>
       )}
 
-      {/* Petunjuk Interaksi */}
-      <div className="absolute bottom-3 left-3 z-[1000] bg-slate-950/80 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-lg text-[11px] text-slate-400">
-        Klik peta untuk set titik asal &bull; Klik garis/tombol untuk pilih rute
+      {/* Petunjuk Legend */}
+      <div className="absolute bottom-3 left-3 z-[1000] bg-slate-950/85 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-lg text-[11px] text-slate-300 flex items-center gap-3">
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Rel Kereta
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> Jalan Kaki/Arteri
+        </span>
       </div>
     </div>
   )
