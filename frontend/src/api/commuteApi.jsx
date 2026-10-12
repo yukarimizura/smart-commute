@@ -1,51 +1,88 @@
-export async function geocodeSearch(query) {
-    if (!query || query.trim().length === 0) return null;
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=id&limit=1`;
-    try {
+const BACKEND_BASE_URL = "http://127.0.0.1:8000"
+
+/**
+ * Mencari koordinat latitude & longitude dari teks alamat via OpenStreetMap Nominatim
+ */
+export async function geocodeSearch(queryText) {
+  if (!queryText || queryText.trim() === "") return null
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      queryText
+    )}&limit=1`
+
     const res = await fetch(url, {
-        headers: { 'User-Agent': 'SmartCommuteAOL/1.0 (academic-project)' }
-    });
-    const data = await res.json();
+      headers: {
+        "Accept-Language": "id,en",
+        "User-Agent": "SmartCommuteDSS/1.0"
+      }
+    })
+
+    const data = await res.json()
     if (data && data.length > 0) {
-        return {
+      return {
         lat: parseFloat(data[0].lat),
         lng: parseFloat(data[0].lon),
         displayName: data[0].display_name
-        };
+      }
     }
-    } catch (err) {
-    console.error("Geocoding gagal:", err);
-    }
-    return null;
-    }
+    return null
+  } catch (err) {
+    console.error("Geocoding fetch error:", err)
+    return null
+  }
+}
 
-export async function analyzeRouteApi({ 
-    originCoords, 
-    destCoords, 
-    selectedMode, 
-    driverSkill,
-    departureTime,
-    dayType,
-    targetArrivalTime
-    }) {
-    const res = await fetch('http://localhost:8000/analyze-route', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        origin_text: `${originCoords[0]}, ${originCoords[1]}`,
-        destination_text: `${destCoords[0]}, ${destCoords[1]}`,
-        selected_mode: selectedMode,
-        driver_skill: driverSkill,
-        departure_time: departureTime,
-        day_type: dayType,
-        target_arrival_time: targetArrivalTime
+/**
+ * Mengambil kemungkinan rute dari backend berdasarkan koordinat dan moda kendaraan
+ */
+export async function getRoutePreviewApi(originCoords, destCoords, mode = "car") {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/routes-preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        originCoords,
+        destCoords,
+        mode
+      })
     })
-    });
 
     if (!res.ok) {
-    const errData = await res.json();
-    throw new Error(errData.detail || 'Gagal memproses analisis rute.');
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.detail || "Gagal mengambil preview kemungkinan rute.")
     }
 
-    return await res.json();
+    return await res.json()
+  } catch (err) {
+    console.error("Route preview fetch error:", err)
+    throw err
+  }
+}
+
+/**
+ * Menjalankan analisis komprehensif DSS ke engine backend FastAPI
+ */
+export async function analyzeRouteApi(payload) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/analyze`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.detail || "Terjadi kesalahan saat memproses data analisis.")
+    }
+
+    return await res.json()
+  } catch (err) {
+    console.error("Analyze route API error:", err)
+    throw err
+  }
 }

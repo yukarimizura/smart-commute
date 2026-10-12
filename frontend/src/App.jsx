@@ -1,22 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/layout/Navbar'
 import Home from './components/home/Home'
 import Methodology from './components/methodology/Methodology'
 import Simulator from './components/simulator/Simulator'
-import { analyzeRouteApi, geocodeSearch } from './api/commuteApi'
+import { analyzeRouteApi, geocodeSearch, getRoutePreviewApi } from './api/commuteApi'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab] = useState('simulator')
 
   const [originCoords, setOriginCoords] = useState([-6.1301, 106.6930])
   const [destCoords, setDestCoords] = useState([-6.2018, 106.7822])
   const [originText, setOriginText] = useState("Citra 2 Extension, Jakarta Barat")
   const [destText, setDestText] = useState("BINUS Anggrek")
   const [activeFocus, setActiveFocus] = useState(null)
-  
-  const [selectedMode, setSelectedMode] = useState("car")
+
+  // State untuk menyimpan opsi rute dinamis (mobil, motor, transit kereta)
+  const [routesPreview, setRoutesPreview] = useState([])
+  const [selectedRouteId, setSelectedRouteId] = useState(0)
+
+  const [selectedMode, setSelectedMode] = useState("motorcycle")
   const [driverSkill, setDriverSkill] = useState("pro")
-  
+
   // State Jadwal & Hari
   const [departureTime, setDepartureTime] = useState("07:30")
   const [dayType, setDayType] = useState("weekday")
@@ -26,6 +30,27 @@ export default function App() {
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
+
+  // Fetch rute dinamis otomatis ketika koordinat asal, tujuan, atau moda kendaraan berubah
+  useEffect(() => {
+    if (!originCoords || !destCoords) return
+
+    let isMounted = true
+    getRoutePreviewApi(originCoords, destCoords, selectedMode)
+      .then((data) => {
+        if (isMounted && data.routes && data.routes.length > 0) {
+          setRoutesPreview(data.routes)
+          setSelectedRouteId(0)
+        }
+      })
+      .catch((err) => {
+        console.error("Gagal memuat rute otomatis:", err)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [originCoords, destCoords, selectedMode])
 
   const handleSearchOrigin = async () => {
     setErrorMsg(null)
@@ -59,6 +84,7 @@ export default function App() {
     setLoading(true)
     setErrorMsg(null)
     try {
+      const activeRoute = routesPreview.find(r => r.id === selectedRouteId) || routesPreview[0] || null
       const data = await analyzeRouteApi({
         originCoords,
         destCoords,
@@ -66,12 +92,20 @@ export default function App() {
         driverSkill,
         departureTime,
         dayType,
-        targetArrivalTime
+        targetArrivalTime,
+        selectedRoute: activeRoute
       })
       setSummary(data.summary)
       setResults(data.options)
+      if (data.routes_preview && data.routes_preview.length > 0) {
+        setRoutesPreview(data.routes_preview)
+      }
     } catch (err) {
-      setErrorMsg(err.message)
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setErrorMsg("Tidak dapat terhubung ke server Backend. Pastikan 'python run.py' aktif di port 8000.")
+      } else {
+        setErrorMsg(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -115,6 +149,9 @@ export default function App() {
             onSearchDest={handleSearchDest}
             onPickOrigin={handlePickOrigin}
             onAnalyze={handleAnalyze}
+            routesPreview={routesPreview}
+            selectedRouteId={selectedRouteId}
+            onSelectRoute={setSelectedRouteId}
           />
         )}
 
