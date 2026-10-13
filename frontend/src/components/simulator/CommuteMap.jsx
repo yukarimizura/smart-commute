@@ -35,16 +35,20 @@ export default function CommuteMap(props) {
     routesPreview,
     selectedRouteId,
     onSelectRoute,
-    onAnalyze,
+    handleSearchOrigin,
+    handleSearchDest,
+    handleAnalyze,
     loading
   } = props
 
   return (
     <div className="w-full flex flex-col gap-3">
-      {/* 1. Cockpit Kontrol Atas (Teruskan onAnalyze dan loading) */}
+      {/* 1. Cockpit Kontrol Atas */}
       <CockpitBar
         {...props}
-        onAnalyze={onAnalyze}
+        onSearchOrigin={props.onSearchOrigin || handleSearchOrigin}
+        onSearchDest={props.onSearchDest || handleSearchDest}
+        onAnalyze={props.onAnalyze || handleAnalyze}
         loading={loading}
       />
 
@@ -63,11 +67,7 @@ export default function CommuteMap(props) {
           />
           <MapController centerCoords={activeFocus} />
           <MapPicker onPick={onPickOrigin} />
-          <RouteLayers
-            {...props}
-            selectedRouteId={selectedRouteId}
-            onSelectRoute={onSelectRoute}
-          />
+          <RouteLayers {...props} />
         </MapContainer>
 
         {/* 3. Floating Route Pills */}
