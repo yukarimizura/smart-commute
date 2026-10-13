@@ -28,12 +28,25 @@ function MapPicker({ onPick }) {
 }
 
 export default function CommuteMap(props) {
-  const { originCoords, onPickOrigin, activeFocus, routesPreview, selectedRouteId, onSelectRoute } = props
+  const {
+    originCoords,
+    onPickOrigin,
+    activeFocus,
+    routesPreview,
+    selectedRouteId,
+    onSelectRoute,
+    onAnalyze,
+    loading
+  } = props
 
   return (
     <div className="w-full flex flex-col gap-3">
-      {/* 1. Cockpit Kontrol Atas */}
-      <CockpitBar {...props} />
+      {/* 1. Cockpit Kontrol Atas (Teruskan onAnalyze dan loading) */}
+      <CockpitBar
+        {...props}
+        onAnalyze={onAnalyze}
+        loading={loading}
+      />
 
       {/* 2. Kanvas Peta Leaflet */}
       <div className="relative w-full h-[540px] lg:h-[620px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
@@ -50,7 +63,11 @@ export default function CommuteMap(props) {
           />
           <MapController centerCoords={activeFocus} />
           <MapPicker onPick={onPickOrigin} />
-          <RouteLayers {...props} />
+          <RouteLayers
+            {...props}
+            selectedRouteId={selectedRouteId}
+            onSelectRoute={onSelectRoute}
+          />
         </MapContainer>
 
         {/* 3. Floating Route Pills */}
