@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { analyzeRouteApi, geocodeSearch, getRoutePreviewApi } from '../api/commuteApi'
+import { geocodeSearch } from '../api/geocodingApi'
+import { getRoutePreviewApi, analyzeRouteApi } from '../api/commuteApi'
 
 export function useCommuteSimulator() {
   // Koordinat & input teks
