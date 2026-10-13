@@ -126,11 +126,12 @@ export default function CockpitBar({
 
         <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex items-end">
           <button
+            type="button"
             onClick={onAnalyze}
             disabled={loading}
             className="w-full py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-lg shadow-md hover:shadow-sky-500/25 active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {loading ? 'Menghitung...' : '⚡ Analisis DSS'}
+            {loading ? 'Menghitung...' : 'Analisis Rute'}
           </button>
         </div>
       </div>

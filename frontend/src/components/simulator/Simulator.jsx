@@ -4,7 +4,7 @@ import TelemetryBanner from './TelemetryBanner'
 import ResultsGrid from './ResultsGrid'
 
 export default function Simulator(props) {
-  const { summary, results, errorMsg } = props
+  const { summary, results, errorMsg, handleAnalyze } = props
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6 md:px-6 space-y-6">
@@ -30,10 +30,13 @@ export default function Simulator(props) {
         </div>
       )}
 
-      {/* Peta Terintegrasi Penuh (Cockpit Navigation Bar + Map Canvas) */}
-      <CommuteMap {...props} onSelectRoute={props.setSelectedRouteId} />
+      {/* Teruskan onAnalyze={handleAnalyze} */}
+      <CommuteMap
+        {...props}
+        onAnalyze={handleAnalyze}
+        onSelectRoute={props.setSelectedRouteId}
+      />
 
-      {/* Hasil Telemetri & Analisis */}
       {summary && <TelemetryBanner summary={summary} />}
       {results && <ResultsGrid results={results} />}
     </div>

@@ -80,7 +80,11 @@ export function useCommuteSimulator() {
     setLoading(true)
     setErrorMsg(null)
     try {
-      const activeRoute = routesPreview.find(r => r.id === selectedRouteId) || routesPreview[0] || null
+      const activeRoute =
+        routesPreview.find((r) => r.id === selectedRouteId) ||
+        routesPreview[0] ||
+        null
+
       const data = await analyzeRouteApi({
         originCoords,
         destCoords,
@@ -91,13 +95,17 @@ export function useCommuteSimulator() {
         targetArrivalTime,
         selectedRoute: activeRoute
       })
-      setSummary(data.summary)
-      setResults(data.options)
-      if (data.routes_preview?.length > 0) {
-        setRoutesPreview(data.routes_preview)
+
+      if (data) {
+        setSummary(data.summary)
+        setResults(data.options)
+        if (data.routes_preview && data.routes_preview.length > 0) {
+          setRoutesPreview(data.routes_preview)
+        }
       }
     } catch (err) {
-      setErrorMsg(err.message || "Gagal memproses analisis rute.")
+      console.error("Gagal eksekusi analisis:", err)
+      setErrorMsg(err.message || "Gagal menghubungkan ke backend analisis.")
     } finally {
       setLoading(false)
     }
