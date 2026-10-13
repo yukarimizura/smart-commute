@@ -6,15 +6,22 @@ import Simulator from './components/simulator/Simulator'
 import { useCommuteSimulator } from './hooks/UseCommuteSimulator'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('simulator')
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('smart_commute_tab' || 'home')
+  })
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    localStorage.setItem('smart_commute_tab', tab)
+  }
   const simulator = useCommuteSimulator()
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
 
       <main className="flex-1 w-full">
-        {activeTab === 'home' && <Home onStart={() => setActiveTab('simulator')} />}
+        {activeTab === 'home' && <Home onStart={() => handleTabChange('simulator')} />}
         {activeTab === 'simulator' && <Simulator {...simulator} />}
         {activeTab === 'methodology' && <Methodology />}
       </main>
