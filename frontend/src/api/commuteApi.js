@@ -5,7 +5,7 @@ import { BACKEND_BASE_URL, handleResponse } from './client'
  */
 export async function getRoutePreviewApi(originCoords, destCoords, mode = "car") {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/routes-preview`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/preview`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
