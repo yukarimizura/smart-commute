@@ -1,46 +1,33 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.route_schema import TextRouteRequest, RouteResponse
-from app.services.geocoding_service import GeocodingService
-from app.services.weather_service import WeatherService
+from app.schemas.route_schema import RoutePreviewRequest, AnalyzeCommuteRequest
 from app.services.routing_service import get_route_possibilities
+from app.services.weather_service import WeatherService
 from app.services.analytics_service import AnalyticsService
-from app.core.config import settings
 
-router = APIRouter(prefix="", tags=["Route Analysis"])
+router = APIRouter(prefix="/api/commute", tags=["Commute Routing & DSS"])
 
-@router.post("/analyze-route", response_model=RouteResponse)
-async def analyze_route(req: TextRouteRequest):
-    origin_geo = await GeocodingService.resolve_address(req.origin_text)
-    if not origin_geo:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Alamat asal '{req.origin_text}' tidak ditemukan. Coba masukkan nama jalan/daerah yang lebih umum."
+@router.post("/preview")
+async def preview_routes(req: RoutePreviewRequest):
+    try:
+        routes = await get_route_possibilities(req.originCoords, req.destCoords, req.mode)
+        return {"routes": routes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/analyze")
+async def analyze_commute(req: AnalyzeCommuteRequest):
+    try:
+        analytics = AnalyticsService()
+        result = analytics.evaluate(
+            origin=req.originCoords,
+            destination=req.destCoords,
+            mode=req.selectedMode,
+            skill=req.driverSkill,
+            departure_time=req.departureTime,
+            day_type=req.dayType,
+            target_time=req.targetArrivalTime,
+            active_route=req.selectedRoute
         )
-
-    dest_geo = await GeocodingService.resolve_address(req.destination_text)
-    if not dest_geo:
-        dest_geo = {
-            "lat": settings.DEFAULT_DEST_LAT, 
-            "lng": settings.DEFAULT_DEST_LNG, 
-            "display_name": "BINUS Kemanggisan (Fallback Acuan Kampus)"
-        }
-
-    dist_km, base_min = await RoutingService.get_osrm_route(
-        origin_geo["lat"], origin_geo["lng"], dest_geo["lat"], dest_geo["lng"]
-    )
-    weather = await WeatherService.get_live_weather(origin_geo["lat"], origin_geo["lng"])
-
-    summary, options = AnalyticsService.evaluate_options(
-        dist_km=dist_km,
-        base_min=base_min,
-        weather=weather,
-        selected_mode=req.selected_mode,
-        driver_skill=req.driver_skill,
-        departure_time=req.departure_time,
-        day_type=req.day_type,
-        target_arrival_time=req.target_arrival_time,
-        origin_display=origin_geo["display_name"],
-        dest_display=dest_geo["display_name"]
-    )
-
-    return RouteResponse(summary=summary, options=options)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
