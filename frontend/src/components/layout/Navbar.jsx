@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import AuthModal from '../auth/AuthModal'
+import ProfileDropdown from './ProfileDropdown'
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
@@ -51,7 +52,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </div>
           </div>
 
-          {/* Navigasi Tengah */}
+          {/* Navigasi Segmented Bar */}
           <nav className="flex items-center gap-1 bg-slate-900/80 border border-slate-800 p-1 rounded-2xl shadow-inner backdrop-blur-md">
             {navItems.map((item) => (
               <button
@@ -69,22 +70,13 @@ export default function Navbar({ activeTab, setActiveTab }) {
             ))}
           </nav>
 
-          {/* Sisi Kanan: Status Akun / Tombol Masuk */}
+          {/* Pojok Kanan: Dropdown Menu Profil atau Tombol Masuk */}
           <div className="flex items-center gap-3">
             {currentUser ? (
-              <div className="flex items-center gap-2.5 bg-slate-900/80 border border-slate-800 pl-3 pr-1.5 py-1 rounded-2xl">
-                <span className="text-xs text-slate-200 font-medium">
-                  {currentUser.full_name}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="Keluar Akun"
-                  className="px-2 py-1 text-[10px] bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 rounded-xl transition cursor-pointer"
-                >
-                  Logout
-                </button>
-              </div>
+              <ProfileDropdown
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
             ) : (
               <button
                 type="button"
@@ -99,7 +91,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
         </div>
       </header>
 
-      {/* AuthModal diletakkan di luar tag header menggunakan fragment agar tidak terpotong h-16 */}
+      {/* Modal Autentikasi */}
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
