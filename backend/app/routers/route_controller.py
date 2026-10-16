@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.route_schema import TextRouteRequest, RouteResponse
 from app.services.geocoding_service import GeocodingService
 from app.services.weather_service import WeatherService
-from app.services.routing_service import RoutingService
+from app.services.routing_service import get_route_possibilities
 from app.services.analytics_service import AnalyticsService
 from app.core.config import settings
 

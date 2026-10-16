@@ -6,6 +6,7 @@ from typing import List, Optional, Any
 from app.services.routing_service import get_route_possibilities
 from app.services.weather_service import WeatherService
 from app.services.analytics_service import AnalyticsService
+from app.routers import route_controller, auth_controller
 
 app = FastAPI(title="Smart Commute DSS API", version="1.0.0")
 
@@ -16,6 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(route_controller.router)
+app.include_router(auth_controller.router)
 
 class RoutePreviewRequest(BaseModel):
     originCoords: List[float]
