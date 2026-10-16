@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
 
-# --- Schema untuk Request ---
+# --- Schema untuk Request dari Frontend ---
 
 class RoutePreviewRequest(BaseModel):
     originCoords: List[float]
@@ -19,49 +19,32 @@ class AnalyzeCommuteRequest(BaseModel):
     selectedRoute: Optional[Dict[str, Any]] = None
 
 
-# --- Schema untuk Analytics Service & Response ---
+# --- Schema yang Dipakai oleh AnalyticsService ---
 
 class TransportOption(BaseModel):
     mode: str
-    name: str
-    total_time_min: float
-    travel_time_min: float
-    buffer_time_min: float
-    parking_buffer_min: float
-    distance_km: float
-    cost_idr: int
-    emission_co2_grams: float
-    weather_impact_percent: float
-    punctuality_prob_percent: float
-    dss_score: float
-    route_details: Optional[Dict[str, Any]] = None
-
-class RouteSummary(BaseModel):
-    origin: List[float]
-    destination: List[float]
-    departure_time: str
-    target_arrival_time: str
-    weather_condition: str
-    rain_probability_percent: float
+    key: str
+    duration_min: float
+    p_late: float
+    co2_grams: float
+    aqi_risk: str
+    detail: str
+    is_selected: bool = False
+    recommended: Optional[bool] = False
 
 class OptimalTimeRecommendation(BaseModel):
     recommended_departure: str
-    reason: str
-    estimated_arrival: str
-    time_saved_min: float
+    saved_minutes: int
+    advice: str
 
-class CommuteOptionResponse(BaseModel):
-    id: str
-    mode: str
-    name: str
-    duration_min: float
+class RouteSummary(BaseModel):
+    origin_resolved: str
+    destination_resolved: str
     distance_km: float
-    cost_rp: int
-    emission_g: float
-    rain_risk_percent: float
-    score: float
-
-class CommuteAnalysisResponse(BaseModel):
-    summary: Dict[str, Any]
-    options: List[CommuteOptionResponse]
-    routes_preview: Optional[List[Dict[str, Any]]] = None
+    base_duration_min: float
+    weather_live: Dict[str, Any]
+    planned_departure: str
+    day_status: str
+    traffic_status: str
+    traffic_factor_desc: str
+    optimal_window: OptimalTimeRecommendation

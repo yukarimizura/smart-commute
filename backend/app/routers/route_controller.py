@@ -3,6 +3,7 @@ from app.schemas.route_schema import RoutePreviewRequest, AnalyzeCommuteRequest
 from app.services.routing_service import get_route_possibilities
 from app.services.analytics_service import AnalyticsService
 from app.services.weather_service import WeatherService
+from app.services.geocoding_service import GeocodingService
 
 router = APIRouter(prefix="/api", tags=["Commute Routing & DSS"])
 
@@ -17,15 +18,18 @@ async def preview_routes(req: RoutePreviewRequest):
 @router.post("/analyze")
 async def analyze_commute(req: AnalyzeCommuteRequest):
     try:
-        # 1. Ekstrak jarak dan durasi dasar dari active_route yang dikirim frontend
         active_route = req.selectedRoute or {}
         dist_km = float(active_route.get("distance_km") or 15.0)
         base_min = float(active_route.get("duration_min") or 35.0)
 
-        # 2. Ambil data kondisi cuaca terkini`
-        weather = await WeatherService.get_live_weather(*req.originCoords)
+        # 1. Ambil cuaca live (async)
+        weather = await WeatherService.get_live_weather(req.originCoords[0], req.originCoords[1])
 
-        # 3. Panggil method static evaluate_options dengan 10 argumen yang dibutuhkan
+        # 2. Ambil nama jalan jika tersedia, atau gunakan fallback koordinat
+        origin_name = active_route.get("origin_name") or f"{req.originCoords[0]:.4f}, {req.originCoords[1]:.4f}"
+        dest_name = active_route.get("dest_name") or f"{req.destCoords[0]:.4f}, {req.destCoords[1]:.4f}"
+
+        # 3. Evaluasi opsi via AnalyticsService
         summary, options = AnalyticsService.evaluate_options(
             dist_km=dist_km,
             base_min=base_min,
@@ -35,20 +39,13 @@ async def analyze_commute(req: AnalyzeCommuteRequest):
             departure_time=req.departureTime,
             day_type=req.dayType,
             target_arrival_time=req.targetArrivalTime,
-            origin_display=active_route.get("origin_name", "Titik Asal"),
-            dest_display=active_route.get("dest_name", "Titik Tujuan")
+            origin_display=origin_name,
+            dest_display=dest_name
         )
 
-        def to_dict(obj):
-            if hasattr(obj, "model_dump"):
-                return obj.model_dump()
-            if hasattr(obj, "dict"):
-                return obj.dict()
-            return obj
-
         return {
-            "summary": to_dict(summary),
-            "options": [to_dict(opt) for opt in options]
+            "summary": summary,
+            "options": options
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
