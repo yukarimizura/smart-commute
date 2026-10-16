@@ -1,8 +1,31 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
-export default function ProfileMenu({ currentUser, onOpenModal, onLogout }) {
+export default function ProfileMenu({ currentUser, onOpenModal, onLogout, isOpen }) {
+  const [shouldRender, setShouldRender] = useState(isOpen)
+  const [animating, setAnimating] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true)
+      const t = requestAnimationFrame(() => setAnimating(true))
+      return () => cancelAnimationFrame(t)
+    } else {
+      setAnimating(false)
+      const t = setTimeout(() => setShouldRender(false), 180)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
+
+  if (!shouldRender) return null
+
   return (
-    <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl shadow-black/80 backdrop-blur-xl p-1.5 z-[9999] animate-in fade-in zoom-in-95 duration-100">
+    <div
+      className={`absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl shadow-black/80 backdrop-blur-xl p-1.5 z-[9999] transition-all duration-200 ease-out ${
+        animating
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+          : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
+      }`}
+    >
       <div className="px-3 py-2 border-b border-slate-800/80 mb-1">
         <p className="text-xs font-semibold text-white truncate">{currentUser?.full_name}</p>
         <p className="text-[11px] text-slate-400 truncate font-mono">{currentUser?.email}</p>

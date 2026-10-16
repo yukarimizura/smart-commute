@@ -35,6 +35,7 @@ export default function ProfileDropdown({ currentUser, onLogout, onUpdateUser })
         />
         {isOpen && (
           <ProfileMenu
+            isOpen={isOpen}
             currentUser={currentUser}
             onOpenModal={handleOpenModal}
             onLogout={() => {

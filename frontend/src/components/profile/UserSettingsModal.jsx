@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import SettingsSidebar from './usersettingsmodal/SettingsSidebar'
 import ProfileTab from './usersettingsmodal/ProfileTab'
 import PreferencesTab from './usersettingsmodal/PreferencesTab'
 import HelpTab from './usersettingsmodal/HelpTab'
 
 export default function UserSettingsModal({ isOpen, initialTab = 'profile', onClose, currentUser, onUpdateUser }) {
+  const [shouldRender, setShouldRender] = useState(isOpen)
+  const [animating, setAnimating] = useState(false)
   const [activeTab, setActiveTab] = useState(initialTab)
   const [fullName, setFullName] = useState(currentUser?.full_name || '')
   const [preferredMode, setPreferredMode] = useState(
@@ -18,17 +21,38 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
   )
   const [isSavedNotice, setIsSavedNotice] = useState(false)
 
+  const handleSmoothClose = useCallback(() => {
+    setAnimating(false)
+    setTimeout(() => {
+      setShouldRender(false)
+      onClose()
+    }, 250)
+  }, [onClose])
+
   useEffect(() => {
     setActiveTab(initialTab)
   }, [initialTab])
 
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true)
+      const t = setTimeout(() => setAnimating(true), 20)
+      return () => clearTimeout(t)
+    } else {
+      setAnimating(false)
+      const t = setTimeout(() => setShouldRender(false), 250)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
+
+  // Kunci Scroll & blur container utama jika ada
   useEffect(() => {
     if (!isOpen) return
     const originalOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') handleSmoothClose()
     }
     window.addEventListener('keydown', handleKeyDown)
 
@@ -36,9 +60,9 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
       document.body.style.overflow = originalOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose])
+  }, [isOpen, handleSmoothClose])
 
-  if (!isOpen) return null
+  if (!shouldRender) return null
 
   const handleSavePreferences = (e) => {
     e.preventDefault()
@@ -56,14 +80,31 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
     setTimeout(() => setIsSavedNotice(false), 2000)
   }
 
-  return (
-    <div className="fixed inset-0 top-0 left-0 w-screen h-screen z-[99999] flex items-center justify-center p-4">
-      <div className="fixed inset-0 w-full h-full bg-slate-950/80 backdrop-blur-xl animate-fadeIn" onClick={onClose} />
+  // Menggunakan createPortal agar modal menempel langsung di <body> dan tidak terkurung oleh header/navbar
+  return createPortal(
+    <div
+      className={`fixed inset-0 top-0 left-0 w-screen h-screen z-[999999] flex items-center justify-center p-4 transition-all duration-300 ease-out ${
+        animating ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}
+    >
+      {/* Backdrop Gelap + Blur Ekstra Tebal */}
       <div
-        className="relative z-10 w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl shadow-black/90 overflow-hidden flex flex-col md:flex-row h-[480px] animate-in fade-in zoom-in-95 duration-150"
+        className="fixed inset-0 w-full h-full bg-slate-950/85 transition-opacity duration-300"
+        style={{
+          backdropFilter: animating ? 'blur(20px)' : 'blur(0px)',
+          WebkitBackdropFilter: animating ? 'blur(20px)' : 'blur(0px)'
+        }}
+        onClick={handleSmoothClose}
+      />
+
+      {/* macOS Style Dialog Window */}
+      <div
+        className={`relative z-10 w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col md:flex-row h-[480px] transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) transform ${
+          animating ? 'scale-100 translate-y-0 opacity-100' : 'scale-90 translate-y-4 opacity-0'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} onClose={onClose} />
+        <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} onClose={handleSmoothClose} />
 
         <div className="flex-1 p-6 overflow-y-auto flex flex-col justify-between bg-slate-900/90 overscroll-contain">
           <div>
@@ -75,7 +116,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
               </h3>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleSmoothClose}
                 className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs flex items-center justify-center transition cursor-pointer"
                 title="Tutup (Esc)"
               >
@@ -110,7 +151,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleSmoothClose}
                 className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer"
               >
                 Tutup
@@ -128,6 +169,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
