@@ -34,6 +34,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
   }
 
+    // Tambahkan di dalam AuthModal sebelum baris if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
   return (
     <div className="fixed inset-0 top-0 left-0 w-screen h-screen z-[99999] flex items-center justify-center p-4">
       {/* 1. Backdrop Gelap Ngeblur Penuh */}
