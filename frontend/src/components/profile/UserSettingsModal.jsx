@@ -10,6 +10,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
   const [animating, setAnimating] = useState(false)
   const [activeTab, setActiveTab] = useState(initialTab)
   const [fullName, setFullName] = useState(currentUser?.full_name || '')
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url || '')
   const [preferredMode, setPreferredMode] = useState(
     () => localStorage.getItem('smart_commute_pref_mode') || 'motorcycle'
   )
@@ -34,6 +35,13 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
   }, [initialTab])
 
   useEffect(() => {
+    if (currentUser) {
+      setFullName(currentUser.full_name || '')
+      setAvatarUrl(currentUser.avatar_url || '')
+    }
+  }, [currentUser])
+
+  useEffect(() => {
     if (isOpen) {
       setShouldRender(true)
       const t = setTimeout(() => setAnimating(true), 20)
@@ -45,7 +53,6 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
     }
   }, [isOpen])
 
-  // Kunci Scroll & blur container utama jika ada
   useEffect(() => {
     if (!isOpen) return
     const originalOverflow = document.body.style.overflow
@@ -70,8 +77,12 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
     localStorage.setItem('smart_commute_pref_skill', driverSkill)
     localStorage.setItem('smart_commute_pref_buffer', autoBuffer)
 
-    if (fullName.trim() && currentUser) {
-      const updated = { ...currentUser, full_name: fullName.trim() }
+    if (currentUser) {
+      const updated = { 
+        ...currentUser, 
+        full_name: fullName.trim() || currentUser.full_name,
+        avatar_url: avatarUrl 
+      }
       localStorage.setItem('smart_commute_user', JSON.stringify(updated))
       if (onUpdateUser) onUpdateUser(updated)
     }
@@ -80,14 +91,13 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
     setTimeout(() => setIsSavedNotice(false), 2000)
   }
 
-  // Menggunakan createPortal agar modal menempel langsung di <body> dan tidak terkurung oleh header/navbar
   return createPortal(
     <div
       className={`fixed inset-0 top-0 left-0 w-screen h-screen z-[999999] flex items-center justify-center p-4 transition-all duration-300 ease-out ${
         animating ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
     >
-      {/* Backdrop Gelap + Blur Ekstra Tebal */}
+      {/* Backdrop Blur Ekstra */}
       <div
         className="fixed inset-0 w-full h-full bg-slate-950/85 transition-opacity duration-300"
         style={{
@@ -97,9 +107,9 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
         onClick={handleSmoothClose}
       />
 
-      {/* macOS Style Dialog Window */}
+      {/* Jendela Modal Lebih Lebar (max-w-3xl) dan Lebih Tinggi (h-[560px]) */}
       <div
-        className={`relative z-10 w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col md:flex-row h-[480px] transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) transform ${
+        className={`relative z-10 w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col md:flex-row h-[560px] transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) transform ${
           animating ? 'scale-100 translate-y-0 opacity-100' : 'scale-90 translate-y-4 opacity-0'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -110,7 +120,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
           <div>
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-5">
               <h3 className="text-sm font-bold text-white capitalize">
-                {activeTab === 'profile' && 'Informasi Pengguna'}
+                {activeTab === 'profile' && 'Kelola Profil & Keamanan Akun'}
                 {activeTab === 'settings' && 'Preferensi Algoritma DSS'}
                 {activeTab === 'help' && 'Pusat Dokumentasi & Bantuan'}
               </h3>
@@ -125,7 +135,13 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
             </div>
 
             {activeTab === 'profile' && (
-              <ProfileTab fullName={fullName} setFullName={setFullName} email={currentUser?.email} />
+              <ProfileTab 
+                fullName={fullName} 
+                setFullName={setFullName} 
+                email={currentUser?.email}
+                avatarUrl={avatarUrl}
+                setAvatarUrl={setAvatarUrl}
+              />
             )}
             {activeTab === 'settings' && (
               <PreferencesTab
@@ -144,7 +160,7 @@ export default function UserSettingsModal({ isOpen, initialTab = 'profile', onCl
             {isSavedNotice ? (
               <span className="text-xs text-emerald-400 font-mono flex items-center gap-1.5 animate-fadeIn">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                Preferensi tersimpan!
+                Perubahan profil berhasil disimpan!
               </span>
             ) : <span />}
 

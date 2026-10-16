@@ -19,9 +19,19 @@ export default function ProfileTrigger({ currentUser, isOpen, onToggle }) {
           : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
       }`}
     >
-      <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-sky-500/20">
-        {getInitials(currentUser?.full_name)}
-      </div>
+      {/* Tampilkan foto profil custom jika ada, atau fallback ke initial gradient */}
+      {currentUser?.avatar_url ? (
+        <img
+          src={currentUser.avatar_url}
+          alt="Avatar"
+          className="w-7 h-7 rounded-xl object-cover border border-sky-500/40 shadow-sm"
+        />
+      ) : (
+        <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-sky-500/20">
+          {getInitials(currentUser?.full_name)}
+        </div>
+      )}
+
       <div className="text-left hidden sm:block">
         <p className="text-xs font-semibold text-slate-200 leading-tight">
           {currentUser?.full_name || 'Pengguna'}
